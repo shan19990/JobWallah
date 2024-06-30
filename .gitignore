@@ -1,0 +1,11 @@
+# .gitignore
+.env
+
+# Django Secret Key
+SECRET_KEY=your-secret-key
+
+# OpenAI API Key
+OPENAI_API_KEY=your-openai-api-key
+
+# Database URL (if needed)
+DATABASE_URL=your-database-url

@@ -1,0 +1,407 @@
+{% extends 'base/base_index.html' %}
+
+{% block title %}
+    Job Wallah
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<style>
+    .container-custom {
+        background-color: lightgray;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .items label {
+        font-weight: bold;
+    }
+    .form-check {
+        margin-bottom: 10px;
+    }
+    .row-margin {
+        margin-bottom: 10px;
+    }
+    .search-button {
+        text-align: center;
+    }
+    .website-list .form-check {
+        display: inline-block;
+        margin-right: 20px;
+    }
+    .spinner-border {
+        display: none;
+        margin-top: 20px;
+        text-align: center;
+    }
+    .no-padding-container {
+        padding: 0 !important;
+    }
+    .chat-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .chat-window {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 300px;
+        max-width: 100%;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        display: none;
+        flex-direction: column;
+        z-index: 1000;
+    }
+    .chat-window header {
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+    .chat-window .messages {
+        padding: 10px;
+        height: 500px;
+        overflow-y: auto;
+    }
+    .chat-window .input-group {
+        border-top: 1px solid #ddd;
+    }
+    @media (min-width: 768px) {
+        .chat-window {
+            width: 400px;
+        }
+    }
+</style>
+
+<div class="no-padding-container">
+    <div class="row" style="width: 100%;">
+        <div class="col-md-2">
+            <div class="container-custom">
+                <form id="resumeUploadForm" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="resume">Upload Resume:</label>
+                        <input type="file" class="form-control" id="resume" name="resume">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload Resume</button>
+                </form>
+                <div id="resumeResults" class="mt-4">
+                    <!-- Resume results will be displayed here -->
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="container-custom">
+                <form id="jobSearchForm" method="POST">
+                    {% csrf_token %}
+                    <div class="row row-margin">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="keyword">Skills:</label>
+                                <input type="text" class="form-control" id="keyword" name="keyword">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="location">Location:</label>
+                                <input type="text" class="form-control" id="location" name="location">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-margin">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="experience">Experience:</label>
+                                <input type="text" class="form-control" id="experience" name="experience">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Type:</label><br>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="work_from_home" name="type" value="1">
+                                            <label class="form-check-label" for="work_from_home">Work From Home</label><br>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="office" name="type" value="0">
+                                            <label class="form-check-label" for="office">Office</label><br>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="hybrid" name="type" value="3">
+                                            <label class="form-check-label" for="hybrid">Hybrid</label><br>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="remote" name="type" value="2">
+                                            <label class="form-check-label" for="remote">Remote</label><br>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row search-button">
+                        <div class="col-md-12">
+                            <label>Websites:</label><br>
+                            <div class="website-list">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="website_indeed" name="website" value="indeed" checked>
+                                    <label class="form-check-label" for="website_indeed">Indeed</label><br>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="website_linkedin" name="website" value="linkedin" checked>
+                                    <label class="form-check-label" for="website_linkedin">LinkedIn</label><br>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="website_naukri" name="website" value="naukri" checked>
+                                    <label class="form-check-label" for="website_naukri">Naukri</label><br>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="website_glassdoor" name="website" value="glassdoor" checked>
+                                    <label class="form-check-label" for="website_glassdoor">GlassDoor</label><br>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row search-button">
+                        <div class="col-md-12 text-center">
+                            <button type="submit" class="btn btn-primary" id="searchButton">Search</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="spinner-border text-primary" role="status" id="loadingSpinner">
+                    <span class="sr-only">Loading...</span>
+                </div>
+
+                <div id="jobResults" class="mt-4">
+                    <!-- Job results will be displayed here -->
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="">
+                <!-- Add any additional content you want to display in the right column -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat button and chat window HTML -->
+<button class="chat-button" id="chatButton">💬</button>
+<div class="chat-window" id="chatWindow">
+    <header>Chat with us</header>
+    <div class="messages" id="chatMessages">
+        <!-- Chat messages will be displayed here -->
+    </div>
+    <div class="input-group">
+        <input type="text" class="form-control" id="chatInput" placeholder="Type a message...">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="button" id="sendChatButton">Send</button>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Function to handle form submission
+    $('#jobSearchForm').on('submit', function(event) {
+        event.preventDefault();
+        $('#jobResults').empty(); // Clear previous results
+        $('#loadingSpinner').show(); // Show loading spinner
+
+        var formData = new FormData(this);
+
+        $.ajax({
+            type: 'POST',
+            url: '',  // Add your job search URL here
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $('#loadingSpinner').hide(); // Hide loading spinner
+                $('#jobResults').empty();
+                if (response.data.length > 0) {
+                    var jobList = $('<div class="list-group"></div>');
+                    $.each(response.data, function(index, job) {
+                        var jobItem = $('<a href="' + job.url + '" class="list-group-item list-group-item-action" target="_blank"></a>');
+                        jobItem.append('<h5 class="mb-1">' + job.title + '</h5>');
+                        jobItem.append('<p class="mb-1"><strong>Company:</strong> ' + job.company + '</p>');
+                        jobItem.append('<p class="mb-1"><strong>Experience:</strong> ' + job.experience + '</p>');
+                        jobItem.append('<p class="mb-1"><strong>Location:</strong> ' + job.location + '</p>');
+                        jobItem.append('<p class="mb-1"><strong>Salary:</strong> ' + job.salary + '</p>');
+                        jobItem.append('<small><strong>Posted Date:</strong> ' + job.posted_date + '</small>');
+                        jobList.append(jobItem);
+                    });
+                    $('#jobResults').append(jobList);
+                } else {
+                    $('#jobResults').append('<p>No jobs found.</p>');
+                }
+            },
+            error: function(error) {
+                $('#loadingSpinner').hide(); // Hide loading spinner
+                console.log(error);
+            }
+        });
+    });
+
+    // Function to handle clicking on the search button
+    $('#searchButton').on('click', function() {
+        $('#jobSearchForm').submit(); // Submit the form
+    });
+
+    // Chat button and chat window toggle
+    $('#chatButton').on('click', function() {
+        $('#chatWindow').toggle();
+    });
+
+    // Send chat message on button click
+    $('#sendChatButton').on('click', function() {
+        sendMessage();
+    });
+
+    // Send chat message on Enter key press
+    $('#chatInput').on('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevent default Enter key behavior
+            sendMessage();
+        }
+    });
+
+    // Function to send chat message
+    function sendMessage() {
+        var message = $('#chatInput').val();
+        if (message.trim() !== '') {
+            $('#chatMessages').append('<div><strong>You:</strong> ' + message + '</div>');
+            $.ajax({
+                type: 'POST',
+                url: '{% url "chat_response" %}',
+                contentType: 'application/json',
+                data: JSON.stringify({ message: message }),
+                success: function(response) {
+                    if (response.message === "owner") {
+                        $('#chatMessages').append(
+                            '<div>' +
+                            '<p><strong>Name:</strong> Shankhanil Ghosh</p>' +
+                            '<p><strong>Experience:</strong> 2.6 years</p>' +
+                            '<p><strong>Current Job:</strong> TCS - Backend Engineer</p>' +
+                            '<p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/shankhanil-ghosh-56b85b293/" target="_blank">https://www.linkedin.com/in/shankhanil-ghosh-56b85b293/</a></p>' +
+                            '<p><strong>GitHub:</strong> <a href="https://github.com/shan19990" target="_blank">https://github.com/shan19990</a></p>' +
+                            '<p><strong>Resume:</strong> <a href="/static/resume/Shankhanil_Ghosh.pdf" download>Download Resume</a></p>' +
+                            '</div>'
+                        );
+                    } else {
+                        $('#chatMessages').append('<div><strong>Job Wallah:</strong> ' + response.message + '</div>');
+                    }
+
+                    if (response.data) {
+                        updateFormFields(response.data);
+                    }
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+            $('#chatInput').val(''); // Clear the input
+        }
+    }
+
+    // Function to update form fields with data
+    function updateFormFields(data) {
+        $('#keyword').val(data.keyword || '');
+        $('#location').val(data.location || '');
+        $('#experience').val(data.experience || '');
+
+        if (data.job_type) {
+            $('input[name="type"]').prop('checked', false); // Clear all checkboxes
+            var jobType = data.job_type.toLowerCase();
+            if (jobType === "work from home") {
+                $('#work_from_home').prop('checked', true);
+            } else if (jobType === "office") {
+                $('#office').prop('checked', true);
+            } else if (jobType === "hybrid") {
+                $('#hybrid').prop('checked', true);
+            } else if (jobType === "remote") {
+                $('#remote').prop('checked', true);
+            }
+        } else {
+            $('input[name="type"]').prop('checked', false);
+        }
+
+        if (data.websites) {
+            $('input[name="website"]').prop('checked', false); // Clear all checkboxes
+            var websites = data.websites.split(',');
+            websites.forEach(function(site) {
+                $('input[name="website"][value="' + site.trim() + '"]').prop('checked', true);
+            });
+        } else {
+            $('input[name="website"]').prop('checked', true);
+        }
+    }
+
+    // Resume upload form submission
+    $('#resumeUploadForm').on('submit', function(event) {
+        event.preventDefault();
+        $('#resumeResults').empty(); // Clear previous results
+
+        var formData = new FormData(this);
+
+        $.ajax({
+            type: 'POST',
+            url: '{% url "upload_resume" %}',  // Make sure the URL name matches your URLconf
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.data) {
+                    var data = response.data;
+                    var result = '<p><strong>Name:</strong> ' + data.name + '</p>';
+                    result += '<p><strong>Phone:</strong> ' + data.phone + '</p>';
+                    result += '<p><strong>Email:</strong> ' + data.email + '</p>';
+                    result += '<p><strong>Location:</strong> ' + data.location + '</p>';
+                    result += '<p><strong>Experience:</strong> ' + data.experience + ' years</p>';
+                    result += '<p><strong>Skills:</strong> ' + data.skills + '</p>';
+                    $('#resumeResults').html(result);
+
+                    // Fill the job search form with extracted data
+                    $('#keyword').val(data.skills);
+                    $('#location').val(data.location);
+                    $('#experience').val(data.experience);
+                } else {
+                    $('#resumeResults').html('<p>No data extracted from the resume.</p>');
+                }
+            },
+            error: function(error) {
+                console.log(error);
+                $('#resumeResults').html('<p>An error occurred while processing the resume.</p>');
+            }
+        });
+    });
+});
+</script>
+
+
+{% endblock %}
