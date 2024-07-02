@@ -25,7 +25,7 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+#SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -136,10 +136,6 @@ STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Debugging: Print all environment variables
-for key in os.environ:
-    print(f"{key}: {os.environ[key]}")
 
-# Access the environment variables
 #SECRET_KEY = os.getenv('SECRET_KEY')
 #OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
