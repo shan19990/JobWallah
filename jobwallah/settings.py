@@ -141,9 +141,5 @@ for key in os.environ:
     print(f"{key}: {os.environ[key]}")
 
 # Access the environment variables
-SECRET_KEY = os.getenv('SECRET_KEY')
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-
-# Debugging prints to verify the values
-print(f"Loaded SECRET_KEY: {SECRET_KEY}")
-print(f"Loaded OPENAI_API_KEY: {OPENAI_API_KEY}")
+#SECRET_KEY = os.getenv('SECRET_KEY')
+#OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
