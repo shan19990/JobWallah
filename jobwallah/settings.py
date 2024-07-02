@@ -25,7 +25,8 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY='django-insecure-x5yg%v3fmdnrvk#@198%i_ylg#78c76qj27v=ym__(@8du-fgx'
+SECRET_KEY = os.getenv('SECRET_KEY')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -135,5 +136,14 @@ STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# OpenAI API Key
-OPENAI_API_KEY='sk-proj-RhJUOUFm2AONYoUOogw3T3BlbkFJQplVkjMMPdkmxXoR3tib'
+# Debugging: Print all environment variables
+for key in os.environ:
+    print(f"{key}: {os.environ[key]}")
+
+# Access the environment variables
+SECRET_KEY = os.getenv('SECRET_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# Debugging prints to verify the values
+print(f"Loaded SECRET_KEY: {SECRET_KEY}")
+print(f"Loaded OPENAI_API_KEY: {OPENAI_API_KEY}")
