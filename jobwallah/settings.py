@@ -139,10 +139,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-
-# Debugging prints to verify the values and their sources
-print(f"Loaded SECRET_KEY from os.getenv: {SECRET_KEY}")
-print(f"Loaded OPENAI_API_KEY from os.getenv: {OPENAI_API_KEY}")
-
-print(f"Environment variable SECRET_KEY: {os.environ.get('SECRET_KEY')}")
-print(f"Environment variable OPENAI_API_KEY: {os.environ.get('OPENAI_API_KEY')}")
