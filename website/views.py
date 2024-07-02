@@ -188,7 +188,6 @@ def chat_response(request):
 
 
 def fetch_resume_details(text):
-    print("settings.OPENAI_API_KEY",settings.OPENAI_API_KEY)
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
     function_descriptions = [
