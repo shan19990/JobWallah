@@ -16,6 +16,7 @@ from django.core.files.storage import default_storage
 import fitz  # PyMuPDF
 import docx
 import nltk
+import logging
 
 
 def IndexView(request):
@@ -187,6 +188,75 @@ def chat_response(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
+# Set up logging
+log_file_path = os.path.join(settings.BASE_DIR, 'logs', 'manual_debug.log')
+os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+
+logging.basicConfig(
+    filename=log_file_path,
+    level=logging.DEBUG,
+    format='%(levelname)s %(asctime)s %(module)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+@csrf_exempt
+def upload_resume(request):
+    if request.method == 'POST' and request.FILES.get('resume'):
+        resume = request.FILES['resume']
+        logging.debug(f"Received resume file: {resume.name}")
+
+        file_path = default_storage.save(resume.name, resume)
+        file_full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+
+        try:
+            # Process the file here (e.g., extract text)
+            if file_full_path.endswith('.pdf'):
+                text = extract_text_from_pdf(file_full_path)
+            elif file_full_path.endswith('.docx'):
+                text = extract_text_from_docx(file_full_path)
+            else:
+                logging.error("Unsupported file format")
+                return JsonResponse({'message': 'Unsupported file format'}, status=400)
+
+            # Fetch resume details using OpenAI API
+            resume_details = fetch_resume_details(text)
+            logging.debug(f"Fetched resume details: {resume_details}")
+
+            # Return the extracted information
+            response_data = {
+                'message': 'Resume processed successfully.',
+                'data': resume_details
+            }
+            logging.debug(f"Processed resume details: {resume_details}")
+        except Exception as e:
+            logging.error(f"Error processing resume: {str(e)}", exc_info=True)
+            return JsonResponse({'message': 'Error processing resume'}, status=500)
+        finally:
+            # Delete the file after processing
+            if os.path.exists(file_full_path):
+                os.remove(file_full_path)
+                logging.debug(f"Deleted uploaded resume file: {file_full_path}")
+
+        return JsonResponse(response_data)
+
+    return JsonResponse({'message': 'No file uploaded'}, status=400)
+
+# Helper functions to process resumes
+def extract_text_from_pdf(pdf_path):
+    text = ""
+    document = fitz.open(pdf_path)
+    for page_num in range(len(document)):
+        page = document.load_page(page_num)
+        text += page.get_text()
+    logging.debug(f"Extracted text from PDF: {text[:200]}...")  # Log first 200 characters for brevity
+    return text
+
+def extract_text_from_docx(docx_path):
+    doc = docx.Document(docx_path)
+    text = [paragraph.text for paragraph in doc.paragraphs]
+    logging.debug(f"Extracted text from DOCX: {text[:200]}...")  # Log first 200 characters for brevity
+    return '\n'.join(text)
+
 def fetch_resume_details(text):
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
@@ -226,7 +296,7 @@ def fetch_resume_details(text):
             },
         }
     ]
-    
+
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": text}],
@@ -237,53 +307,7 @@ def fetch_resume_details(text):
     # Extract arguments from AI response
     function_call = completion.choices[0].message.function_call
     arguments = json.loads(function_call.arguments)
-    
+
+    logging.debug(f"Fetched resume details: {arguments}")
+
     return arguments
-
-@csrf_exempt
-def upload_resume(request):
-    if request.method == 'POST' and request.FILES.get('resume'):
-        resume = request.FILES['resume']
-        
-        file_path = default_storage.save(resume.name, resume)
-        file_full_path = os.path.join(settings.MEDIA_ROOT, file_path)
-        
-        try:
-            # Process the file here (e.g., extract text)
-            if file_full_path.endswith('.pdf'):
-                text = extract_text_from_pdf(file_full_path)
-            elif file_full_path.endswith('.docx'):
-                text = extract_text_from_docx(file_full_path)
-            else:
-                return JsonResponse({'message': 'Unsupported file format'}, status=400)
-
-            # Fetch resume details using OpenAI API
-            resume_details = fetch_resume_details(text)
-
-            # Return the extracted information
-            response_data = {
-                'message': 'Resume processed successfully.',
-                'data': resume_details
-            }
-        finally:
-            # Delete the file after processing
-            if os.path.exists(file_full_path):
-                os.remove(file_full_path)
-
-        return JsonResponse(response_data)
-    
-    return JsonResponse({'message': 'No file uploaded'}, status=400)
-
-# Helper functions to process resumes
-def extract_text_from_pdf(pdf_path):
-    text = ""
-    document = fitz.open(pdf_path)
-    for page_num in range(len(document)):
-        page = document.load_page(page_num)
-        text += page.get_text()
-    return text
-
-def extract_text_from_docx(docx_path):
-    doc = docx.Document(docx_path)
-    text = [paragraph.text for paragraph in doc.paragraphs]
-    return '\n'.join(text)
